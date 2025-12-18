@@ -1,58 +1,27 @@
 # Documentação de Problemas Identificados
 
-Este arquivo deve ser preenchido pelo candidato com todos os problemas encontrados no código.
+## Problema #1: Falta de carregamento das variáveis de ambiente na conexão
 
-## Formato de Documentação
+**Localização**: `src/database/connection.ts:4`
 
-Para cada problema identificado, documente seguindo o formato abaixo:
-
-```markdown
-## Problema #X: [Título do Problema]
-
-**Localização**: `caminho/do/arquivo.ts:linha`
-
-**Categoria**: [Segurança / Performance / Lógica de Negócio / Tratamento de Erros / Validação / Integridade]
+**Categoria**: Tratamento de Erros / Inicialização
 
 **Descrição**: 
-Descrição detalhada do problema encontrado.
+O arquivo de conexão tentava acessar `process.env.DATABASE_URL` antes 
+do arquivo `.env` ser carregado, resultando em uma string vazia (undefined).
 
 **Por que é um problema**: 
-Explicação do porquê este código representa um problema.
+- Node.js não carrega o arquivo `.env` automaticamente
+- Sem as credenciais corretas, a Pool de conexão PostgreSQL falha na 
+  autenticação imediatamente
+- Isso impede que a aplicação inicie ou rode migrations
 
 **Impacto**: 
-Qual o impacto potencial deste problema na aplicação.
+A aplicação quebrava ao iniciar ou ao tentar rodar migrations, impedindo qualquer uso do sistema.
 
 **Solução aplicada**: 
-Como você corrigiu o problema (após a correção).
+```typescript
+// Adicionada a configuração do dotenv no início para garantir a leitura do .env
+import dotenv from 'dotenv';
+dotenv.config();
 ```
-
----
-
-## Exemplo
-
-## Problema #1: Falta de validação de email duplicado
-
-**Localização**: `src/services/user.service.ts:25`
-
-**Categoria**: Validação / Lógica de Negócio
-
-**Descrição**: 
-O método `createUser` não verifica se já existe um usuário com o email fornecido antes de criar um novo registro.
-
-**Por que é um problema**: 
-Isso pode resultar em emails duplicados no banco de dados, violando a constraint de unicidade e causando erros ou inconsistências.
-
-**Impacto**: 
-- Erro ao tentar criar usuário com email duplicado
-- Possível inconsistência de dados
-- Má experiência do usuário
-
-**Solução aplicada**: 
-Adicionada verificação antes de criar o usuário, retornando erro apropriado se o email já existir.
-
----
-
-## Problemas Identificados
-
-*Preencha abaixo com os problemas que você encontrou...*
-

@@ -25,3 +25,20 @@ A aplicação quebrava ao iniciar ou ao tentar rodar migrations, impedindo qualq
 import dotenv from 'dotenv';
 dotenv.config();
 ```
+
+
+
+
+
+
+
+
+
+---
+
+## Melhorias Adicionais
+### Criação de Ferramenta para Testes Rápidos
+
+**Descrição**: 
+- Implementação do arquivo `requests.http` na raiz do projeto, contendo cenários de teste pré-configurados para todos os endpoints da API (CRUD de Usuários, Grupos e Produtos).
+- Inclusão da seção "🧪 Como Testar" no README, orientando o uso da extensão REST Client para validação imediata.

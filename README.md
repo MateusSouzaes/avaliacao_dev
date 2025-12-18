@@ -47,6 +47,15 @@ npm run db:seed
 ```bash
 npm run dev
 ```
+## 🧪 Como Testar
+
+Para facilitar a validação dos endpoints e a correção dos bugs, foi incluído o arquivo `requests.http` na raiz do projeto.
+
+Recomenda-se o uso da extensão **REST Client** para VS Code:
+
+1. Instale a extensão "REST Client" (humao.rest-client).
+2. Abra o arquivo `requests.http`.
+3. Clique no botão **Send Request** (que aparece acima de cada rota) para testar a API diretamente no editor.
 
 ## 📚 Estrutura do Projeto
 

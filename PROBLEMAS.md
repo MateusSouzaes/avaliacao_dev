@@ -450,6 +450,25 @@ Adicionada verificação `findById`. Se o grupo não existir, lança erro "Group
 
 ---
 
+## Problema #21: Tentativa de excluir produto inexistente
+
+**Localização**: `src/services/product.service.ts:75`
+
+**Categoria**: Tratamento de Erros
+
+**Descrição**: 
+O método `deleteProduct` mandava o comando de exclusão para o banco sem verificar se o produto existia.
+
+**Por que é um problema**: 
+- Assim como nos outros serviços, o banco não gera erro e a API retorna sucesso (204/200) para um ID que não existe.
+- Falta de feedback correto (404) para o cliente.
+
+**Impacto**: 
+Feedback falso positivo de exclusão bem-sucedida.
+
+**Solução aplicada**: 
+Adicionada verificação `findById` antes de deletar. Se o produto não for encontrado, lança erro "Product not found".
+
 
 
 

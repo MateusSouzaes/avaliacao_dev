@@ -75,6 +75,10 @@ export class ProductService {
   }
 
   async deleteProduct(id: number) {
+    const product = await this.productRepository.findById(id);
+    if (!product) {
+      throw new Error('Product not found');
+    }
     await this.productRepository.delete(id);
   }
 

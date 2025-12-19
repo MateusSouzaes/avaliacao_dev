@@ -427,8 +427,28 @@ Má experiência do usuário (UX) e dificuldade de integração com o frontend.
 - A resposta agora inclui um array `details` mapeando o caminho (`path`) e a mensagem (`message`) de cada erro de validação.
 - Erros que não são de validação agora são passados para o `next(error)` para serem tratados pelo manipulador global.
 
+---
 
+## Problema #20: Listagem de usuários de grupo inexistente
 
+**Localização**: `src/services/group.service.ts:52`
+
+**Categoria**: Lógica de Negócio / Tratamento de Erros
+
+**Descrição**: 
+O método `getGroupUsers` buscava os usuários diretamente no repositório sem verificar se o `groupId` informado existia.
+
+**Por que é um problema**: 
+- Se o grupo não existe, a API retorna uma lista vazia `[]` com status 200 OK.
+- Isso engana o consumidor da API, que pensa que o grupo existe mas não tem usuários, quando na verdade o grupo não existe (deveria ser 404).
+
+**Impacto**: 
+Ambiguidade na resposta da API e dificuldade de debug para o frontend.
+
+**Solução aplicada**: 
+Adicionada verificação `findById`. Se o grupo não existir, lança erro "Group not found".
+
+---
 
 
 

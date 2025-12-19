@@ -52,6 +52,10 @@ export class GroupService {
   }
 
   async getGroupUsers(groupId: number) {
+    const group = await this.groupRepository.findById(groupId);
+    if (!group) {
+      throw new Error('Group not found');
+    }
     return await this.groupRepository.getGroupUsers(groupId);
   }
 }

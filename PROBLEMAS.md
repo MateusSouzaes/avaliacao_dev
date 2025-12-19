@@ -125,6 +125,27 @@ Má experiência de uso da API e falta de controle sobre a integridade referenci
 
 ---
 
+## Problema #6: Remoção de usuário de grupo sem verificação de vínculo
+
+**Localização**: `src/repositories/user.repository.ts:76`
+
+**Categoria**: Lógica de Negócio / Tratamento de Erros
+
+**Descrição**: 
+O método `removeUserFromGroup` executava o comando de exclusão (`delete`) diretamente no banco de dados sem verificar antes se o usuário realmente fazia parte daquele grupo.
+
+**Por que é um problema**: 
+- Se tentarmos remover um usuário de um grupo onde ele não está, o banco de dados não gera erro, apenas informa que "0 linhas foram deletadas".
+- A API retornaria status de sucesso (200 OK) para uma operação que, na prática, não fez nada. Isso gera um "falso positivo".
+
+**Impacto**: 
+O cliente da API recebe uma confirmação de sucesso enganosa, dificultando o debug e o entendimento do estado real dos dados.
+
+**Solução aplicada**: 
+Adicionada uma consulta (`select`) na tabela de relacionamento (`userGroups`) antes de tentar deletar. Se o vínculo não for encontrado, o sistema agora lança um erro explícito: "User is not in this group".
+
+--- 
+
 ## Melhorias Adicionais
 ### Criação de Ferramenta para Testes Rápidos
 

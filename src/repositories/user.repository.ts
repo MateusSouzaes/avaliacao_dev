@@ -73,7 +73,15 @@ export class UserRepository {
   }
 
   async removeUserFromGroup(userId: number, groupId: number) {
-    // PROBLEMA INTENCIONAL: Não verifica se a relação existe antes de deletar
+    const relation = await db
+      .select()
+      .from(userGroups)
+      .where(and(eq(userGroups.userId, userId), eq(userGroups.groupId, groupId)));
+    
+    if (!relation.length) {
+      throw new Error('User is not in this group');
+    }
+
     await db
       .delete(userGroups)
       .where(and(eq(userGroups.userId, userId), eq(userGroups.groupId, groupId)));

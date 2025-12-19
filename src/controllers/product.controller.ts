@@ -58,9 +58,12 @@ export class ProductController {
 
   async searchProducts(req: Request, res: Response) {
     try {
-      // PROBLEMA INTENCIONAL: Não valida se searchTerm foi fornecido
       const { searchTerm } = req.query;
-      const products = await this.productService.searchProducts(searchTerm as string);
+      if (typeof searchTerm !== 'string' || !searchTerm.trim()) {
+        return res.status(400).json({ error: 'searchTerm is required' });
+      }
+      const term = searchTerm.trim();
+      const products = await this.productService.searchProducts(term);
       res.json(products);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

@@ -300,6 +300,98 @@ Substituído o loop por uma única consulta utilizando `.innerJoin`. Agora o ban
 ### Criação de Ferramenta para Testes Rápidos
 
 ---
+## Problema #14: Vulnerabilidade de SQL Injection na busca de produtos
+
+**Localização**: `src/repositories/product.repository.ts:45`
+
+**Categoria**: Segurança
+
+**Descrição**: 
+O método `searchByName` utilizava interpolação de string direta na query SQL (`sql.raw(...)`), concatenando o termo de busca sem higienização.
+
+**Por que é um problema**: 
+- Permite que um atacante insira comandos SQL maliciosos através do campo de busca (SQL Injection).
+- Um usuário mal intencionado poderia ler dados sensíveis de outras tabelas ou até apagar dados do banco.
+
+**Impacto**: 
+Risco crítico de vazamento de dados ou destruição total do banco de dados.
+
+**Solução aplicada**: 
+Substituída a query bruta pelo query builder do Drizzle ORM, utilizando parâmetros seguros (`${products.name} ILIKE ...`), o que garante que o input seja tratado como texto e não como comando executável.
+
+---
+
+## Problema #15: Produtos com preços ou estoques negativos
+
+**Localização**: `src/services/product.service.ts` (métodos `create` e `update`)
+
+**Categoria**: Regra de Negócio
+
+**Descrição**: 
+O sistema aceitava a criação ou atualização de produtos com valores negativos para `price` e `stock`, o que é fisicamente e financeiramente impossível na lógica da loja.
+
+**Por que é um problema**: 
+- Estoque negativo quebra a lógica de inventário.
+- Preço negativo poderia gerar créditos indevidos ou erros de cálculo em pedidos futuros.
+
+**Impacto**: 
+Inconsistência contábil e de inventário.
+
+**Solução aplicada**: 
+Adicionadas validações estritas (`if (data.price < 0)` e `if (data.stock < 0)`) antes de salvar ou atualizar, lançando erros explicativos.
+
+---
+
+## Problema #16: Vínculo de produto com grupo inexistente
+
+**Localização**: `src/services/product.service.ts`
+
+**Categoria**: Integridade de Dados
+
+**Descrição**: 
+Ao criar ou editar um produto, era possível enviar um `groupId` inválido. O serviço tentava salvar diretamente, delegando o erro para o banco de dados.
+
+**Por que é um problema**: 
+- Gera erros de banco (Foreign Key Constraint) não tratados na camada de aplicação.
+- Cria dependência de mensagens de erro do driver do banco, que podem expor detalhes da infraestrutura.
+
+**Impacto**: 
+Erro 500 genérico para o usuário em vez de uma mensagem clara de validação.
+
+**Solução aplicada**: 
+Adicionada verificação prévia: se `groupId` for informado, o sistema busca o grupo (`groupRepository.findById`). Se não existir, lança erro "Group not found".
+
+---
+
+## Problema #17: Busca de produtos sem termo de pesquisa
+
+**Localização**: `src/controllers/product.controller.ts:58`
+
+**Categoria**: Validação de Entrada
+
+**Descrição**: 
+O endpoint de busca não validava se o parâmetro `searchTerm` foi enviado ou se estava vazio, passando `undefined` ou string vazia para o serviço.
+
+**Por que é um problema**: 
+- Tentar buscar `undefined` pode quebrar a query ou retornar resultados inesperados (todos os produtos).
+- Desperdiça processamento do banco de dados com consultas inúteis.
+
+**Impacto**: 
+Comportamento imprevisível da API e desperdício de recursos.
+
+**Solução aplicada**: 
+Adicionada validação no controller: se `searchTerm` não for uma string ou estiver vazio (após trim), a API retorna erro `400 Bad Request` informando que o termo é obrigatório.
+
+
+
+
+
+
+
+
+
+
+
 
 
 **Descrição**: 

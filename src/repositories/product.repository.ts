@@ -45,10 +45,11 @@ export class ProductRepository {
     await db.delete(products).where(eq(products.id, id));
   }
 
-  // PROBLEMA INTENCIONAL: SQL Injection potencial e falta de validação
   async searchByName(searchTerm: string) {
-    const query = `SELECT * FROM products WHERE name LIKE '%${searchTerm}%'`;
-    return await db.execute(sql.raw(query));
+    return await db
+      .select()
+      .from(products)
+      .where(sql`${products.name} ILIKE ${`%${searchTerm}%`}`);
   }
 
   async findByGroup(groupId: number) {

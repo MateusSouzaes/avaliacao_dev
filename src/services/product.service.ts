@@ -29,8 +29,20 @@ export class ProductService {
     stock: number;
     groupId?: number;
   }) {
-    // PROBLEMA INTENCIONAL: Não valida se grupo existe quando groupId é fornecido
-    // PROBLEMA INTENCIONAL: Não valida se price é negativo
+    if (data.price < 0) {
+      throw new Error('Price cannot be negative');
+    }
+    if (data.stock < 0) {
+      throw new Error('Stock cannot be negative');
+    }
+
+    if (data.groupId) {
+      const group = await this.groupRepository.findById(data.groupId);
+      if (!group) {
+        throw new Error('Group not found');
+      }
+    }
+
     return await this.productRepository.create(data);
   }
 
@@ -46,7 +58,19 @@ export class ProductService {
       throw new Error('Product not found');
     }
 
-    // PROBLEMA INTENCIONAL: Permite atualizar estoque para negativo
+    if (data.price !== undefined && data.price < 0) {
+      throw new Error('Price cannot be negative');
+    }
+    if (data.stock !== undefined && data.stock < 0) {
+      throw new Error('Stock cannot be negative');
+    }
+    if (data.groupId !== undefined) {
+      const group = await this.groupRepository.findById(data.groupId);
+      if (!group) {
+        throw new Error('Group not found');
+      }
+    }
+
     return await this.productRepository.update(id, data);
   }
 
@@ -55,7 +79,6 @@ export class ProductService {
   }
 
   async searchProducts(searchTerm: string) {
-    // PROBLEMA INTENCIONAL: Usa método com SQL injection potencial
     return await this.productRepository.searchByName(searchTerm);
   }
 

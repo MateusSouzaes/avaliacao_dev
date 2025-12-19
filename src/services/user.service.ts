@@ -1,11 +1,14 @@
 import { UserRepository } from '../repositories/user.repository';
+import { GroupRepository } from '../repositories/group.repository';
 import bcrypt from 'bcryptjs';
 
 export class UserService {
   private userRepository: UserRepository;
+  private groupRepository: GroupRepository;
 
   constructor() {
     this.userRepository = new UserRepository();
+    this.groupRepository = new GroupRepository();
   }
 
   async getAllUsers() {
@@ -48,7 +51,7 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
-    // PROBLEMA INTENCIONAL: Permite atualizar senha sem hash?
+ 
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
@@ -66,7 +69,10 @@ export class UserService {
   }
 
   async deleteUser(id: number) {
-    // PROBLEMA INTENCIONAL: Não verifica se usuário existe antes de deletar
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
     await this.userRepository.delete(id);
   }
 
@@ -75,7 +81,15 @@ export class UserService {
   }
 
   async addUserToGroup(userId: number, groupId: number) {
-    // PROBLEMA INTENCIONAL: Não valida se usuário ou grupo existem
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const group = await this.groupRepository.findById(groupId);
+    if (!group) {
+      throw new Error('Group not found');
+    }
     return await this.userRepository.addUserToGroup(userId, groupId);
   }
 

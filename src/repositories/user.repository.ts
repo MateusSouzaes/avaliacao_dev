@@ -39,7 +39,7 @@ export class UserRepository {
     name: string;
     email: string;
     password: string;
-    role: string;
+    role: 'admin' | 'user' | 'viewer';
     active: boolean;
   }>) {
     const result = await db

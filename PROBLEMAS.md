@@ -275,11 +275,32 @@ Mapeamento das mensagens de erro nos métodos `create`, `update` e `delete`:
 - "Group name already in use" / "Cannot delete group..." → **409 Conflict**
 - "Group not found" → **404 Not Found**
 
+---
+
+## Problema #13: Problema de Performance N+1 ao listar usuários do grupo
+
+**Localização**: `src/repositories/group.repository.ts:38`
+
+**Categoria**: Performance
+
+**Descrição**: 
+O método `getGroupUsers` realizava uma consulta inicial para buscar os IDs dos usuários do grupo e, em seguida, executava um loop (`for`) fazendo uma nova consulta ao banco de dados para cada usuário encontrado individualmente.
+
+**Por que é um problema**: 
+- Isso caracteriza o "N+1 Query Problem".
+- Se um grupo tiver 50 usuários, a aplicação faria 51 requisições ao banco de dados para uma única chamada de API.
+- Causa latência alta e sobrecarga desnecessária no banco de dados.
+
+**Impacto**: 
+Lentidão severa na resposta do endpoint `GET /groups/:id/users` conforme a quantidade de dados cresce, podendo derrubar a aplicação em cenários de alta carga.
+
+**Solução aplicada**: 
+Substituído o loop por uma única consulta utilizando `.innerJoin`. Agora o banco de dados resolve a junção das tabelas e retorna todos os dados em apenas uma query.
+## Melhorias Adicionais
+### Criação de Ferramenta para Testes Rápidos
 
 ---
 
-## Melhorias Adicionais
-### Criação de Ferramenta para Testes Rápidos
 
 **Descrição**: 
 - Implementação do arquivo `requests.http` na raiz do projeto, contendo cenários de teste pré-configurados para todos os endpoints da API (CRUD de Usuários, Grupos e Produtos).

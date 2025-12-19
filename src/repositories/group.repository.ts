@@ -38,21 +38,20 @@ export class GroupRepository {
   }
 
   async getGroupUsers(groupId: number) {
-    const userGroupRecords = await db
-      .select()
-      .from(userGroups)
-      .where(eq(userGroups.groupId, groupId));
-
-    const userIds = userGroupRecords.map(ug => ug.userId);
-    
-    // PROBLEMA INTENCIONAL: N+1 Query Problem
-    const groupUsers = [];
-    for (const userId of userIds) {
-      const user = await db.select().from(users).where(eq(users.id, userId));
-      groupUsers.push(user[0]);
-    }
-    
-    return groupUsers;
-  }
+  const rows = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      active: users.active,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+    })
+    .from(userGroups)
+    .innerJoin(users, eq(userGroups.userId, users.id))
+    .where(eq(userGroups.groupId, groupId));
+  return rows; 
+}
 }
 

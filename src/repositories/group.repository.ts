@@ -11,6 +11,10 @@ export class GroupRepository {
     const result = await db.select().from(groups).where(eq(groups.id, id));
     return result[0];
   }
+  async findByName(name: string) {
+    const result = await db.select().from(groups).where(eq(groups.name, name));
+    return result[0];
+  }
 
   async create(data: { name: string; description?: string }) {
     const result = await db.insert(groups).values(data).returning();

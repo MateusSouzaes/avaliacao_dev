@@ -32,7 +32,11 @@ export class GroupController {
       const group = await this.groupService.createGroup(req.body);
       res.status(201).json(group);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'Group name already in use') {
+        res.status(409).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 
@@ -42,7 +46,11 @@ export class GroupController {
       const group = await this.groupService.updateGroup(id, req.body);
       res.json(group);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'Group not found') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 
@@ -52,7 +60,13 @@ export class GroupController {
       await this.groupService.deleteGroup(id);
       res.status(204).send();
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'Group not found') {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === 'Cannot delete group with associated products') {
+        res.status(409).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 

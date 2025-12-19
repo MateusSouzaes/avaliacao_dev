@@ -23,7 +23,10 @@ export class GroupService {
   }
 
   async createGroup(data: { name: string; description?: string }) {
-    // PROBLEMA INTENCIONAL: Não valida se grupo com mesmo nome já existe
+    const group = await this.groupRepository.findByName(data.name);
+    if (group) {
+      throw new Error('Group name already in use');
+    }
     return await this.groupRepository.create(data);
   }
 
@@ -37,7 +40,14 @@ export class GroupService {
   }
 
   async deleteGroup(id: number) {
-    // PROBLEMA INTENCIONAL: Deleta grupo sem verificar se há produtos associados
+    const group = await this.groupRepository.findById(id);
+    if (!group) {
+      throw new Error('Group not found');
+    }
+    const products = await this.productRepository.findByGroup(id);
+    if (products.length > 0) {
+      throw new Error('Cannot delete group with associated products');
+    }
     await this.groupRepository.delete(id);
   }
 

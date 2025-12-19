@@ -194,6 +194,86 @@ Código frágil e propenso a bugs silenciosos que só seriam descobertos ao tent
 Definida a tipagem estrita para o parâmetro `role` utilizando Union Type (`'admin' | 'user' | 'viewer'`) e removido o uso de `any`, garantindo a segurança de tipos em tempo de compilação.
 
 ---
+## Problema #9: Criação de grupos com nomes duplicados
+
+**Localização**: `src/services/group.service.ts` e `src/repositories/group.repository.ts`
+
+**Categoria**: Validação de Dados / Lógica de Negócio
+
+**Descrição**: 
+O sistema permitia criar múltiplos grupos com o mesmo nome, pois não havia verificação prévia no banco de dados.
+
+**Por que é um problema**: 
+- Gera ambiguidade para os usuários (ex: dois grupos "Financeiro").
+- Dificulta a gestão e a seleção correta dos grupos no frontend.
+
+**Impacto**: 
+Inconsistência de dados e confusão operacional.
+
+**Solução aplicada**: 
+- Criado método `findByName` no repositório.
+- Adicionada validação no Service: se o nome já existe, lança erro "Group name already in use".
+
+---
+
+## Problema #10: Exclusão de grupo com produtos associados (Integridade)
+
+**Localização**: `src/services/group.service.ts`
+
+**Categoria**: Integridade de Dados / Segurança
+
+**Descrição**: 
+O método `deleteGroup` permitia excluir um grupo mesmo que ele tivesse produtos vinculados, deixando esses produtos com referências órfãs.
+
+**Por que é um problema**: 
+- Quebra a integridade referencial do banco de dados.
+- Produtos vinculados a grupos inexistentes podem causar erros em listagens ou relatórios.
+
+**Impacto**: 
+Corrupção de dados e quebra de funcionalidades que dependem do vínculo grupo-produto.
+
+**Solução aplicada**: 
+- Verifica se o grupo existe (`findById`).
+- Verifica se existem produtos neste grupo (`productRepository.findByGroup`).
+- Se houver produtos, bloqueia a exclusão lançando erro "Cannot delete group with associated products".
+
+---
+
+## Problema #11: Remoção silenciosa de usuário de grupo sem vínculo
+
+**Localização**: `src/repositories/user.repository.ts:76`
+
+**Categoria**: Lógica de Negócio
+
+**Descrição**: 
+A função `removeUserFromGroup` tentava deletar o relacionamento diretamente. Se o usuário não estivesse no grupo, o banco não retornava erro, dando a falsa impressão de sucesso.
+
+**Por que é um problema**: 
+- A API retorna "Sucesso" para uma operação que não fez nada.
+- Dificulta o feedback para o usuário ou para o desenvolvedor que consome a API.
+
+**Solução aplicada**: 
+Adicionada consulta prévia na tabela de relacionamento. Se o vínculo não existir, lança erro explícito "User is not in this group".
+
+---
+
+## Problema #12: Tratamento de erros incorreto no Controller de Grupos
+
+**Localização**: `src/controllers/group.controller.ts`
+
+**Categoria**: Tratamento de Erros / Padrões HTTP
+
+**Descrição**: 
+Assim como no controller de usuários, o `GroupController` retornava status 500 para erros de regra de negócio (nome duplicado, grupo não encontrado, bloqueio de exclusão).
+
+**Por que é um problema**: 
+- Falta de semântica REST (deveria ser 409 Conflict ou 404 Not Found).
+- Frontend não consegue distinguir erro de servidor de erro de validação.
+
+**Solução aplicada**: 
+Mapeamento das mensagens de erro nos métodos `create`, `update` e `delete`:
+- "Group name already in use" / "Cannot delete group..." → **409 Conflict**
+- "Group not found" → **404 Not Found**
 
 
 ---

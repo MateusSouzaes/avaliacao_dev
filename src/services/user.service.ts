@@ -25,7 +25,10 @@ export class UserService {
     email: string;
     password: string;
   }) {
-    // PROBLEMA INTENCIONAL: Falta validação de email duplicado antes de criar
+    const existing = await this.userRepository.findByEmail(data.email);
+    if (existing) {
+      throw new Error('Email already in use');
+    }
     const hashedPassword = await bcrypt.hash(data.password, 10);
     
     return await this.userRepository.create({
@@ -45,8 +48,7 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
-
-    // PROBLEMA INTENCIONAL: Permite atualizar senha sem hash
+    // PROBLEMA INTENCIONAL: Permite atualizar senha sem hash?
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }

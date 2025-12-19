@@ -57,6 +57,29 @@ Novos usuários sempre são criados com role padrão `'user'` (definido no schem
 
 ---
 
+## Problema #3: Criação de usuário aceita e-mails duplicados
+
+**Localização**: `src/services/user.service.ts.28`,
+
+**Categoria**: Validação de Dados / Integridade
+
+**Descrição**: O fluxo de criação de usuário não validava se o e-mail já existia antes de inserir no banco, permitindo múltiplas contas com o mesmo e-mail.
+
+**Por que é um problema**:
+- Quebra a unicidade lógica de usuários
+- Pode causar conflitos de login e recuperação de senha
+- Gera erros de integridade no banco (unique constraint) em produção
+
+**Impacto**: Risco de falhas de autenticação, inconsistência de dados e erros 500 se a constraint de unicidade for disparada.
+
+**Solução aplicada**:
+- Antes de criar, a service consulta `findByEmail`; se já existir, lança erro impedindo a criação duplicada.
+- O schema do banco já possui constraint `unique` em `email`, mantendo defesa adicional.
+
+
+
+---
+
 ## Melhorias Adicionais
 ### Criação de Ferramenta para Testes Rápidos
 

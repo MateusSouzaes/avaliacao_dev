@@ -51,7 +51,14 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
- 
+
+    if (data.email) {
+      const existing = await this.userRepository.findByEmail(data.email);
+      if (existing && existing.id !== id) {
+        throw new Error('Email already in use');
+      }
+    }
+
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
@@ -94,6 +101,16 @@ export class UserService {
   }
 
   async removeUserFromGroup(userId: number, groupId: number) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const group = await this.groupRepository.findById(groupId);
+    if (!group) {
+      throw new Error('Group not found');
+    }
+
     await this.userRepository.removeUserFromGroup(userId, groupId);
   }
 }

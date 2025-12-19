@@ -32,7 +32,11 @@ export class UserController {
       const user = await this.userService.createUser(req.body);
       res.status(201).json(user);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'Email already in use') {
+        res.status(409).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 
@@ -42,20 +46,30 @@ export class UserController {
       const user = await this.userService.updateUser(id, req.body);
       res.json(user);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'User not found') {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === 'Email already in use') {
+        res.status(409).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
   
   async updateUserRole(req: Request, res: Response) {
-  try {
-    const id = parseInt(req.params.id);
-    const { role } = req.body;
-    const user = await this.userService.updateUserRole(id, role);
-    res.json(user);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    try {
+      const id = parseInt(req.params.id);
+      const { role } = req.body;
+      const user = await this.userService.updateUserRole(id, role);
+      res.json(user);
+    } catch (error: any) {
+      if (error.message === 'User not found') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
+    }
   }
-}
   
 
   async deleteUser(req: Request, res: Response) {
@@ -89,7 +103,11 @@ export class UserController {
       const result = await this.userService.addUserToGroup(userId, groupId);
       res.status(201).json(result);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'User not found' || error.message === 'Group not found') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 
@@ -100,7 +118,11 @@ export class UserController {
       await this.userService.removeUserFromGroup(userId, groupId);
       res.status(204).send();
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      if (error.message === 'User not found' || error.message === 'Group not found' || error.message === 'User is not in this group') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 }

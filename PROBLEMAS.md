@@ -59,24 +59,26 @@ Novos usuários sempre são criados com role padrão `'user'` (definido no schem
 
 ---
 
-## Problema #3: Criação de usuário aceita e-mails duplicados
+## Problema #3: Falta de validação de e-mail duplicado (Criação e Atualização)
 
-**Localização**: `src/services/user.service.ts.28`,
+**Localização**: `src/services/user.service.ts` (métodos `createUser` e `updateUser`)
 
 **Categoria**: Validação de Dados / Integridade
 
-**Descrição**: O fluxo de criação de usuário não validava se o e-mail já existia antes de inserir no banco, permitindo múltiplas contas com o mesmo e-mail.
+**Descrição**: 
+Os fluxos de criação e atualização de usuário não validavam se o e-mail já existia antes de persistir no banco. No caso de atualização, permitia-se alterar o e-mail para um já em uso por outro usuário.
 
 **Por que é um problema**:
-- Quebra a unicidade lógica de usuários
-- Pode causar conflitos de login e recuperação de senha
-- Gera erros de integridade no banco (unique constraint) em produção
+- Quebra a unicidade lógica de usuários.
+- Pode causar conflitos de login e recuperação de senha.
+- Gera erros de integridade no banco (unique constraint), retornando erros 500 genéricos para o cliente.
 
-**Impacto**: Risco de falhas de autenticação, inconsistência de dados e erros 500 se a constraint de unicidade for disparada.
+**Impacto**: 
+Risco de falhas de autenticação, inconsistência de dados e má experiência do usuário ao receber erros de servidor em vez de validação.
 
 **Solução aplicada**:
-- Antes de criar, a service consulta `findByEmail`; se já existir, lança erro impedindo a criação duplicada.
-- O schema do banco já possui constraint `unique` em `email`, mantendo defesa adicional.
+- Implementada verificação `findByEmail` antes de criar (`create`) e antes de atualizar (`update`).
+- Se o e-mail já estiver em uso, o serviço agora lança um erro explícito: "Email already in use".
 
 ---
 
@@ -146,24 +148,53 @@ Adicionada uma consulta (`select`) na tabela de relacionamento (`userGroups`) an
 
 --- 
 
-## Problema #7: Código HTTP incorreto ao deletar usuário (500 em vez de 404)
+## Problema #7: Tratamento de erros incorreto (Status 500 Genérico)
 
-**Localização**: `src/controllers/user.controller.ts:67`
+**Localização**: `src/controllers/user.controller.ts` (Todos os métodos)
 
-**Categoria**: Tratamento de Erros
+**Categoria**: Tratamento de Erros / Padrões HTTP
 
 **Descrição**: 
-O método `deleteUser` capturava qualquer erro vindo do serviço e retornava sempre o status code `500` (Internal Server Error), mesmo quando o erro era conhecido ("User not found").
+O controlador capturava erros de negócio (como "User not found" ou "Email already in use") e retornava invariavelmente o status code `500 Internal Server Error`.
 
 **Por que é um problema**: 
-- O código `500` indica falha no servidor, enquanto tentar deletar algo que não existe é um erro do cliente, devendo ser `404`.
-- Isso confunde o frontend, que não consegue distinguir se o servidor caiu ou se apenas o ID estava errado.
+- Viola a semântica do protocolo REST:
+  - Recurso não encontrado deve retornar **404**.
+  - Conflito de dados (email duplicado) deve retornar **409**.
+- O status 500 indica falha crítica no servidor, gerando falsos alertas de monitoramento.
 
 **Impacto**: 
-Dificuldade na integração com o frontend e alertas falsos de "erro crítico" no servidor para uma operação comum.
+O frontend não conseguia distinguir entre um erro de validação (culpa do usuário) e um erro de servidor (bug), dificultando o tratamento de mensagens na interface.
 
 **Solução aplicada**: 
-Implementada uma verificação no bloco `catch`: se a mensagem do erro for "User not found", a resposta agora é `404`; caso contrário, mantém-se o `500`.
+Refatorado o tratamento de erros (`try/catch`) em todos os métodos do controller para mapear as mensagens de erro:
+- `User/Group not found` → **404 Not Found**
+- `Email already in use` → **409 Conflict**
+- Outros erros → **500 Internal Server Error**
+
+---
+
+## Problema #8: Tipagem insegura no Repositório (Uso de `any`)
+
+**Localização**: `src/repositories/user.repository.ts`
+
+**Categoria**: Type Safety / Boas Práticas
+
+**Descrição**: 
+O método de criação no repositório recebia o campo `role` como string opcional e forçava um cast para `any` (`as any`), ignorando a tipagem estrita do TypeScript e os valores permitidos pelo banco de dados.
+
+**Por que é um problema**: 
+- O TypeScript perde a capacidade de validar se o valor passado está dentro dos permitidos ('admin', 'user', 'viewer').
+- Aumenta o risco de enviar strings inválidas para o banco, o que causaria erros de query em tempo de execução.
+
+**Impacto**: 
+Código frágil e propenso a bugs silenciosos que só seriam descobertos ao tentar salvar um papel inválido no banco de dados.
+
+**Solução aplicada**: 
+Definida a tipagem estrita para o parâmetro `role` utilizando Union Type (`'admin' | 'user' | 'viewer'`) e removido o uso de `any`, garantindo a segurança de tipos em tempo de compilação.
+
+---
+
 
 ---
 

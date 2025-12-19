@@ -21,7 +21,7 @@ export class UserRepository {
     name: string;
     email: string;
     password: string;
-    role?: string;
+    role?: 'admin' | 'user' | 'viewer';
   }) {
     const result = await db
       .insert(users)
@@ -29,7 +29,7 @@ export class UserRepository {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: data.role as any,
+        ...(data.role ? { role: data.role } : {}),
       })
       .returning();
     return result[0];

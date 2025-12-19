@@ -6,11 +6,19 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  // PROBLEMA INTENCIONAL: Expõe detalhes do erro em produção
+  const isProd = process.env.NODE_ENV === 'production';
+
   console.error(err);
-  res.status(500).json({
-    error: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-  });
+
+  const status = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+  const payload: { error: string; stack?: string } = {
+    error: isProd ? 'Internal server error' : err.message,
+  };
+
+  if (!isProd && err.stack) {
+    payload.stack = err.stack;
+  }
+
+  res.status(status).json(payload);
 };
 

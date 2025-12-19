@@ -382,6 +382,50 @@ Comportamento imprevisível da API e desperdício de recursos.
 **Solução aplicada**: 
 Adicionada validação no controller: se `searchTerm` não for uma string ou estiver vazio (após trim), a API retorna erro `400 Bad Request` informando que o termo é obrigatório.
 
+---
+
+## Problema #18: Exposição de detalhes técnicos de erro em produção
+
+**Localização**: `src/middleware/error.middleware.ts`
+
+**Categoria**: Segurança
+
+**Descrição**: 
+O manipulador de erros (`errorHandler`) retornava a mensagem original do erro (`err.message`) para o cliente, independentemente do ambiente.
+
+**Por que é um problema**: 
+- Em produção, mensagens de erro cruas podem expor informações sensíveis da infraestrutura (ex: nomes de tabelas do banco, falhas de conexão com IPs, versões de bibliotecas).
+- Facilita a exploração de vulnerabilidades por atacantes (Information Disclosure).
+
+**Impacto**: 
+Risco de vazamento de informações internas da aplicação.
+
+**Solução aplicada**: 
+Adicionada verificação de ambiente (`isProd`). Se estiver em produção, o erro retornado agora é uma mensagem genérica "Internal server error". As mensagens detalhadas ficam restritas ao ambiente de desenvolvimento.
+
+---
+
+## Problema #19: Mensagens de erro de validação genéricas
+
+**Localização**: `src/middleware/validation.middleware.ts`
+
+**Categoria**: Usabilidade / Experiência do Desenvolvedor (DX)
+
+**Descrição**: 
+O middleware de validação capturava os erros do Zod e retornava apenas uma mensagem fixa `{ "error": "Validation error" }`, descartando os detalhes sobre quais campos falharam e por quê.
+
+**Por que é um problema**: 
+- O frontend ou usuário final não sabe qual campo está incorreto (ex: se o e-mail é inválido ou a senha é curta demais).
+- Torna o processo de desenvolvimento e debug muito difícil.
+- O código antigo também engolia erros que não eram de validação, retornando 400 incorretamente.
+
+**Impacto**: 
+Má experiência do usuário (UX) e dificuldade de integração com o frontend.
+
+**Solução aplicada**: 
+- Tratamento específico para instâncias de `ZodError`.
+- A resposta agora inclui um array `details` mapeando o caminho (`path`) e a mensagem (`message`) de cada erro de validação.
+- Erros que não são de validação agora são passados para o `next(error)` para serem tratados pelo manipulador global.
 
 
 
@@ -389,9 +433,10 @@ Adicionada validação no controller: se `searchTerm` não for uma string ou est
 
 
 
+---
 
-
-
+## Melhorias Adicionais
+### Criação de Ferramenta para Testes Rápidos
 
 
 **Descrição**: 

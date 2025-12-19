@@ -146,6 +146,27 @@ Adicionada uma consulta (`select`) na tabela de relacionamento (`userGroups`) an
 
 --- 
 
+## Problema #7: Código HTTP incorreto ao deletar usuário (500 em vez de 404)
+
+**Localização**: `src/controllers/user.controller.ts:67`
+
+**Categoria**: Tratamento de Erros
+
+**Descrição**: 
+O método `deleteUser` capturava qualquer erro vindo do serviço e retornava sempre o status code `500` (Internal Server Error), mesmo quando o erro era conhecido ("User not found").
+
+**Por que é um problema**: 
+- O código `500` indica falha no servidor, enquanto tentar deletar algo que não existe é um erro do cliente, devendo ser `404`.
+- Isso confunde o frontend, que não consegue distinguir se o servidor caiu ou se apenas o ID estava errado.
+
+**Impacto**: 
+Dificuldade na integração com o frontend e alertas falsos de "erro crítico" no servidor para uma operação comum.
+
+**Solução aplicada**: 
+Implementada uma verificação no bloco `catch`: se a mensagem do erro for "User not found", a resposta agora é `404`; caso contrário, mantém-se o `500`.
+
+---
+
 ## Melhorias Adicionais
 ### Criação de Ferramenta para Testes Rápidos
 

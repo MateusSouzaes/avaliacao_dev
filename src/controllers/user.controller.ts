@@ -64,8 +64,11 @@ export class UserController {
       await this.userService.deleteUser(id);
       res.status(204).send();
     } catch (error: any) {
-      // PROBLEMA INTENCIONAL: Não trata adequadamente quando usuário não existe
-      res.status(500).json({ error: error.message });
+      if (error.message === 'User not found') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
     }
   }
 

@@ -239,25 +239,7 @@ Corrupção de dados e quebra de funcionalidades que dependem do vínculo grupo-
 
 ---
 
-## Problema #11: Remoção silenciosa de usuário de grupo sem vínculo
-
-**Localização**: `src/repositories/user.repository.ts:76`
-
-**Categoria**: Lógica de Negócio
-
-**Descrição**: 
-A função `removeUserFromGroup` tentava deletar o relacionamento diretamente. Se o usuário não estivesse no grupo, o banco não retornava erro, dando a falsa impressão de sucesso.
-
-**Por que é um problema**: 
-- A API retorna "Sucesso" para uma operação que não fez nada.
-- Dificulta o feedback para o usuário ou para o desenvolvedor que consome a API.
-
-**Solução aplicada**: 
-Adicionada consulta prévia na tabela de relacionamento. Se o vínculo não existir, lança erro explícito "User is not in this group".
-
----
-
-## Problema #12: Tratamento de erros incorreto no Controller de Grupos
+## Problema #11: Tratamento de erros incorreto no Controller de Grupos
 
 **Localização**: `src/controllers/group.controller.ts`
 
@@ -277,7 +259,7 @@ Mapeamento das mensagens de erro nos métodos `create`, `update` e `delete`:
 
 ---
 
-## Problema #13: Problema de Performance N+1 ao listar usuários do grupo
+## Problema #12: Problema de Performance N+1 ao listar usuários do grupo
 
 **Localização**: `src/repositories/group.repository.ts:38`
 
@@ -296,11 +278,9 @@ Lentidão severa na resposta do endpoint `GET /groups/:id/users` conforme a quan
 
 **Solução aplicada**: 
 Substituído o loop por uma única consulta utilizando `.innerJoin`. Agora o banco de dados resolve a junção das tabelas e retorna todos os dados em apenas uma query.
-## Melhorias Adicionais
-### Criação de Ferramenta para Testes Rápidos
 
 ---
-## Problema #14: Vulnerabilidade de SQL Injection na busca de produtos
+## Problema #13: Vulnerabilidade de SQL Injection na busca de produtos
 
 **Localização**: `src/repositories/product.repository.ts:45`
 
@@ -321,7 +301,7 @@ Substituída a query bruta pelo query builder do Drizzle ORM, utilizando parâme
 
 ---
 
-## Problema #15: Produtos com preços ou estoques negativos
+## Problema #14: Produtos com preços ou estoques negativos
 
 **Localização**: `src/services/product.service.ts` (métodos `create` e `update`)
 
@@ -342,7 +322,7 @@ Adicionadas validações estritas (`if (data.price < 0)` e `if (data.stock < 0)`
 
 ---
 
-## Problema #16: Vínculo de produto com grupo inexistente
+## Problema #15: Vínculo de produto com grupo inexistente
 
 **Localização**: `src/services/product.service.ts`
 
@@ -363,7 +343,7 @@ Adicionada verificação prévia: se `groupId` for informado, o sistema busca o 
 
 ---
 
-## Problema #17: Busca de produtos sem termo de pesquisa
+## Problema #16: Busca de produtos sem termo de pesquisa
 
 **Localização**: `src/controllers/product.controller.ts:58`
 
@@ -384,7 +364,7 @@ Adicionada validação no controller: se `searchTerm` não for uma string ou est
 
 ---
 
-## Problema #18: Exposição de detalhes técnicos de erro em produção
+## Problema #17: Exposição de detalhes técnicos de erro em produção
 
 **Localização**: `src/middleware/error.middleware.ts`
 
@@ -405,7 +385,7 @@ Adicionada verificação de ambiente (`isProd`). Se estiver em produção, o err
 
 ---
 
-## Problema #19: Mensagens de erro de validação genéricas
+## Problema #18: Mensagens de erro de validação genéricas
 
 **Localização**: `src/middleware/validation.middleware.ts`
 
@@ -429,7 +409,7 @@ Má experiência do usuário (UX) e dificuldade de integração com o frontend.
 
 ---
 
-## Problema #20: Listagem de usuários de grupo inexistente
+## Problema #19: Listagem de usuários de grupo inexistente
 
 **Localização**: `src/services/group.service.ts:52`
 
@@ -450,7 +430,7 @@ Adicionada verificação `findById`. Se o grupo não existir, lança erro "Group
 
 ---
 
-## Problema #21: Tentativa de excluir produto inexistente
+## Problema #20: Tentativa de excluir produto inexistente
 
 **Localização**: `src/services/product.service.ts:75`
 
@@ -468,9 +448,6 @@ Feedback falso positivo de exclusão bem-sucedida.
 
 **Solução aplicada**: 
 Adicionada verificação `findById` antes de deletar. Se o produto não for encontrado, lança erro "Product not found".
-
-
-
 
 ---
 

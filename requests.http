@@ -1,0 +1,132 @@
+//Para Facilitar os testes da API, utilizei o arquivo requests.http no VSCode com a extensão REST Client instalada.
+
+
+@baseUrl = http://localhost:3000
+
+### Healthcheck
+GET {{baseUrl}}/health 
+
+
+
+### Listar usuarios
+GET {{baseUrl}}/api/users
+
+### Buscar usuario por ID
+GET {{baseUrl}}/api/users/1
+
+
+### Criar usuario
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Joao",
+  "email": "joao@123.com",
+  "password": "123456",
+  "role": "admin"
+}
+
+
+### Atualizar usuario
+PUT {{baseUrl}}/api/users/4
+Content-Type: application/json
+
+{
+  "name": "Joao Atualizado",
+  "email": "joao@example.com",
+  "password": "123456"
+}
+
+### Atualizar role de um usuário (apenas admin)
+PATCH {{baseUrl}}/api/users/1/role
+Content-Type: application/json
+
+{
+  "role": "admin"
+}
+
+// Remover usuário está com erro
+### Remover usuario
+DELETE {{baseUrl}}/api/users/1
+
+### Listar grupos
+GET {{baseUrl}}/api/groups
+
+### Criar grupo
+POST {{baseUrl}}/api/groups
+Content-Type: application/json
+
+{
+  "name": "Grupo A",
+  "description": "Descricao do grupo"
+}
+
+### Atualizar grupo
+PUT {{baseUrl}}/api/groups/1
+Content-Type: application/json
+
+{
+  "name": "Grupo A+",
+  "description": "Descricao atualizada"
+}
+
+### Remover grupo
+DELETE {{baseUrl}}/api/groups/1
+
+### Listar usuarios de um grupo
+GET {{baseUrl}}/api/groups/1/users
+
+### Listar produtos
+GET {{baseUrl}}/api/products
+
+### Buscar produto por ID
+GET {{baseUrl}}/api/products/1
+
+### Criar produto
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Camisa",
+  "description": "Camisa azul",
+  "price": 100,
+  "stock": 10,
+  "groupId": 1
+}
+
+### Atualizar produto
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Camisa Premium",
+  "description": "Camisa azul premium",
+  "price": 150,
+  "stock": 12,
+  "groupId": 1
+}
+
+### Remover produto
+DELETE {{baseUrl}}/api/products/1
+
+### Buscar produtos por termo
+GET {{baseUrl}}/api/products/search?searchTerm=camisa
+
+### Listar produtos de um grupo
+GET {{baseUrl}}/api/products/group/1
+
+### Adicionar usuario a grupo
+POST {{baseUrl}}/api/users/1/groups
+Content-Type: application/json
+
+{
+  "groupId": 1
+}
+
+### Remover usuario de grupo
+DELETE {{baseUrl}}/api/users/1/groups
+Content-Type: application/json
+
+{
+  "groupId": 1
+}

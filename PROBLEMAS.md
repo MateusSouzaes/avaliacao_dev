@@ -20,18 +20,39 @@ do arquivo `.env` ser carregado, resultando em uma string vazia (undefined).
 A aplicação quebrava ao iniciar ou ao tentar rodar migrations, impedindo qualquer uso do sistema.
 
 **Solução aplicada**: 
-```typescript
-// Adicionada a configuração do dotenv no início para garantir a leitura do .env
-import dotenv from 'dotenv';
-dotenv.config();
-```
+Adicionada a configuração do dotenv no início para garantir a leitura do .env
 
 
+## Problema #2: Qualquer usuário pode definir seu próprio papel (role)
 
+**Localização**: `src/validators/user.validator.ts`, `src/routes/user.routes.ts`, `src/controllers/user.controller.ts`, `src/services/user.service.ts`
 
+**Categoria**: Segurança / Controle de Acesso
 
+**Descrição**: 
+Os schemas de validação `createUserSchema` e `updateUserSchema` permitiam que qualquer usuário enviasse o campo `role` nas requisições de criação e atualização, possibilitando que um usuário comum se promovesse a administrador.
 
+**Por que é um problema**: 
+- Qualquer pessoa criando uma conta poderia se registrar como `admin`
+- Usuários comuns poderiam alterar seu próprio `role` para obter privilégios administrativos através do endpoint `PUT /users/:id`
 
+**Impacto**: 
+Falha crítica de segurança que permite que qualquer usuário obtenha privilégios administrativos, comprometendo completamente a segurança da aplicação.
+
+**Solução Aplicada (Parcial)**: 
+
+1. **Validator**: Removido o campo `role` dos schemas `createUserSchema` e `updateUserSchema`. Criado novo schema `updateUserRoleSchema` específico para alteração de role.
+
+2. **Rota**: Criada rota exclusiva `PATCH /users/:id/role` para alteração de role.
+
+3. **Controller**: Implementado método `updateUserRole` isolado.
+
+4. **Service**: Implementado método `updateUserRole` com validação de existência do usuário.
+
+**Nota sobre a solução**: 
+Novos usuários sempre são criados com role padrão `'user'` (definido no schema do banco de dados). O campo `role` não pode mais ser enviado nos endpoints de criação (`POST /users`) ou atualização genérica (`PUT /users/:id`).
+
+**Limitação**: A rota `PATCH /users/:id/role` está **desprotegida** e não verifica se quem está fazendo a requisição é um administrador. Qualquer pessoa ainda pode acessar este endpoint e alterar roles. Para uma solução completa, seria necessário implementar middlewares de autenticação e autorização na rota.
 
 
 ---
@@ -42,3 +63,4 @@ dotenv.config();
 **Descrição**: 
 - Implementação do arquivo `requests.http` na raiz do projeto, contendo cenários de teste pré-configurados para todos os endpoints da API (CRUD de Usuários, Grupos e Produtos).
 - Inclusão da seção "🧪 Como Testar" no README, orientando o uso da extensão REST Client para validação imediata.
+

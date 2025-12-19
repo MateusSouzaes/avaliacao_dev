@@ -77,6 +77,7 @@ src/
 - `GET /api/users/:id` - Busca usuário por ID
 - `POST /api/users` - Cria novo usuário
 - `PUT /api/users/:id` - Atualiza usuário
+- `PATCH /api/users/:id/role` - Atualiza a Role do usuario
 - `DELETE /api/users/:id` - Remove usuário
 - `GET /api/users/:id/groups` - Lista grupos do usuário
 - `POST /api/users/:id/groups` - Adiciona usuário a grupo

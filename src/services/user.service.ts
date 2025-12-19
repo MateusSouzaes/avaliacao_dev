@@ -24,7 +24,6 @@ export class UserService {
     name: string;
     email: string;
     password: string;
-    role?: string;
   }) {
     // PROBLEMA INTENCIONAL: Falta validação de email duplicado antes de criar
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -32,6 +31,7 @@ export class UserService {
     return await this.userRepository.create({
       ...data,
       password: hashedPassword,
+      role: 'user',
     });
   }
 
@@ -39,7 +39,6 @@ export class UserService {
     name: string;
     email: string;
     password: string;
-    role: string;
     active: boolean;
   }>) {
     const user = await this.userRepository.findById(id);
@@ -53,6 +52,15 @@ export class UserService {
     }
 
     return await this.userRepository.update(id, data);
+  }
+
+  async updateUserRole(id: number, role: 'admin' | 'user' | 'viewer') {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    return await this.userRepository.update(id, { role });
   }
 
   async deleteUser(id: number) {

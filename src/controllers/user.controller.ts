@@ -45,6 +45,18 @@ export class UserController {
       res.status(500).json({ error: error.message });
     }
   }
+  
+  async updateUserRole(req: Request, res: Response) {
+  try {
+    const id = parseInt(req.params.id);
+    const { role } = req.body;
+    const user = await this.userService.updateUserRole(id, role);
+    res.json(user);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+  
 
   async deleteUser(req: Request, res: Response) {
     try {
